@@ -13,7 +13,6 @@
 ;;     You should have received a copy of the GNU General Public License
 ;;     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 (asdf:load-system 'screamer)
 (asdf:load-system 'alexandria)
 
@@ -67,6 +66,16 @@ each side is between 1 and max-val inclusive."
   "Returns true if die1 beats die2 with over 50% probability."
   (> (beat-probability die1 die2) 0.5))
 
+(defun dice< (die1 die2)
+  "Returns true if die1 < die2, comparing the sides of the dice sequentially."
+  (let ((len (min (length die1) (length die2))))
+    (do ((i 0 (+ i 1)))
+	((or (= i len)
+	     (not (= (svref die1 i) (svref die2 i))))
+	 (if (= i len)
+	     nil ; Reached end of vector
+	     (< (svref die1 i) (svref die2 i)))))))
+
 (defun a-nontransitive-triple
     (num-sides max-val &optional (print-dice nil))
   "Returns a set of three non-transitive dice
@@ -75,7 +84,9 @@ with the given number of sides and each side is between
   (let ((d1 (make-die num-sides max-val))
 	(d2 (make-die num-sides max-val))
 	(d3 (make-die num-sides max-val)))
-    (unless (and (beats d1 d2)
+    (unless (and (dice< d1 d2)
+		 (dice< d2 d3)
+		 (beats d1 d2)
 		 (beats d2 d3)
 		 (beats d3 d1))
       (fail))
@@ -91,4 +102,3 @@ with the given number of sides and each side is between
 ;; Returns all triplets of dice as described above,
 ;; printing them as they are found.
 ;; (all-values (a-nontransitive-triple 6 5 t))
-
